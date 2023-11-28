@@ -26,7 +26,7 @@ class Client:
         """
         Fetches a user by their id or name.
         :param user:
-        :param mode: The gamemode 
+        :param mode: The gamemode
         :return:
         """
         assert type(mode) == int, "mode has to be integer.\n 0:std \n 1:taiko \n 2:ctb \n 3:mania"
