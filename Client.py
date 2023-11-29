@@ -29,11 +29,11 @@ class Client:
         :param mode: The gamemode
         :return:
         """
-        assert type(mode) == int, "mode has to be integer.\n 0:std \n 1:taiko \n 2:ctb \n 3:mania"
+        assert type(mode) is int, "mode has to be integer.\n 0:std \n 1:taiko \n 2:ctb \n 3:mania"
 
         params = {
             "u": user,
-            "mode": 3
+            "m": 3
         }
 
         return self._req("/get_user", params)
@@ -44,3 +44,10 @@ class Client:
         }
 
         return self._req("/get_match", params)
+
+    def get_beatmap(self, beatmap_id: int):
+        params = {
+            "b": beatmap_id
+        }
+
+        return self._req("/get_beatmaps", params)
