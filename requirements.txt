@@ -1,2 +1,4 @@
-gspread
-dotenv
+gspread~=3.7.0
+python-dotenv~=0.15.0
+requests~=2.25.1
+discord.py
