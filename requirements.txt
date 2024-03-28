@@ -2,3 +2,10 @@ gspread~=3.7.0
 python-dotenv~=0.15.0
 requests~=2.25.1
 discord.py
+beautifulsoup4~=4.12.3
+selenium~=4.11.2
+requests_html
+ossapi~=3.4.4
+webdriver-manager
+pycountry~=23.12.11
+bs4~=0.0.2

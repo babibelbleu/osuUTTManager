@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from models import User, Beatmap, Multiplayer
+
 import requests
 
 
@@ -36,18 +38,18 @@ class Client:
             "m": 3
         }
 
-        return self._req("/get_user", params)
+        return User(self._req("/get_user", params))
 
     def get_multiplayer_info(self, mp_id: int):
         params = {
             "mp": mp_id
         }
 
-        return self._req("/get_match", params)
+        return Multiplayer(self._req("/get_match", params))
 
     def get_beatmap(self, beatmap_id: int):
         params = {
             "b": beatmap_id
         }
 
-        return self._req("/get_beatmaps", params)
+        return Beatmap(self._req("/get_beatmaps", params))
