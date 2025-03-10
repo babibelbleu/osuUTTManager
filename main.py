@@ -37,7 +37,7 @@ worksheet = sheet.worksheet("UTT2024")
 # [
 #   {
 #       id: xxxxx    // id de la beatmap jouée
-#       stage : LN1
+#       Stage : LN1
 #       player1 : 0
 #       player2 : 0
 #       ...
@@ -320,6 +320,10 @@ def update_sheet_with_game_id(game_id: int):
     for game in games:
         scores = game.scores
 
+        if not game.beatmap:
+            print("No Beatmap found (probably because it has been deleted. No scores can be added to the sheet for this map.")
+            continue
+
         beatmap_id = game.beatmap.id
         beatmap_name = game.beatmap.title
         beatmap_difficulty_name = game.beatmap.difficulty_name
@@ -342,7 +346,7 @@ def update_sheet_with_game_id(game_id: int):
     if len(cells_to_update) > 0:
         print("updating cells")
         worksheet.update_cells(cells_to_update)
-    else :
+    else:
         print("Aucune cellule à mettre à jour")
 
 
@@ -356,13 +360,15 @@ def update_score_in_sheet(player: str, map_id: str, score: int, is_score_choke: 
             for key in row.keys():
                 index_col += 1
                 if str(key).casefold() == player.casefold():
-                    is_score_choke_in_sheet = type(row[key]) is str and row[key][-1].casefold() == "*".casefold()
-                    score_in_sheet = row[key]
                     if row[key] == '':
                         row[key] = 0
+
+                    is_score_choke_in_sheet = type(row[key]) is str and row[key][-1].casefold() == "*".casefold()
+                    score_in_sheet = row[key]
+
                     if type(row[key]) is str and is_score_choke_in_sheet:
                         score_in_sheet = row[key][:-1]  # Remove the '*' to cast to integer
-                    if int(score) < int(score_in_sheet):
+                    if int(score_in_sheet) < int(score):
                         print("Le score réalisé est supérieur à celui de la sheet !")
                         row[key] = score
                         return index_row, index_col
@@ -466,7 +472,7 @@ def get_mp_id(mp_link: str):
     match_id = mp_link[22:]  # Sous le format https://osu.ppy.sh/mp/111463775
 
     if match_id[0] not in STR_NUMBERS:
-        match_id = mp_link[37:]
+        match_id = mp_link[37:]  # Sous le format https://osu.ppy.sh/community/matches/111463775
 
     return match_id
 

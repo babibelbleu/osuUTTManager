@@ -1,9 +1,6 @@
 class Event:
     def __init__(self, event_json):
         import globals
-
-        print(event_json[0])
-
         _event = event_json[0]
 
         self.beatmap = globals.client.get_beatmap(_event["beatmap_id"]) if _event["beatmap_id"] is not None else None
