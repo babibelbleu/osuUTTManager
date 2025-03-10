@@ -20,4 +20,4 @@ class MultiplayerScore:
         self.count_miss = score["countmiss"]
         self.is_perfect = score["perfect"] == 1
         self.has_passed = score["pass"] == 1
-        self.mods = getModsString(int(score["enabled_mods"]))
+        self.mods = None if score["enabled_mods"] is None else getModsString(int(score["enabled_mods"]))

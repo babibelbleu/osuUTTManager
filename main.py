@@ -19,7 +19,7 @@ from discord import app_commands
 
 from bs4 import BeautifulSoup
 
-from utils import remove_duplicate_elements_in_list
+from utils import remove_duplicate_elements_in_list, check_if_score_is_choke
 
 from globals import DISCORD_GUILD_ID, DISCORD_BOT_TOKEN, client
 
@@ -31,7 +31,7 @@ tree = app_commands.CommandTree(bot)
 
 sa = gspread.service_account(filename='service_account.json')
 sheet = sa.open("UTT scores")
-worksheet = sheet.worksheet("Data")
+worksheet = sheet.worksheet("UTT2024")
 
 
 # [
@@ -113,6 +113,20 @@ async def get_seedings(interaction: discord.Interaction):
     players_pp = await get_data_from_players(players)
     await interaction.edit_original_response(content="Attribution des seedings...")
     embed = await get_seedings_from_players(players_pp)
+    await interaction.edit_original_response(content="", embed=embed)
+
+
+
+@tree.command(
+    name="check_player_scores",
+    description="Checks a plyers's scores with their potential chokes on them",
+    guild=discord.Object(id=DISCORD_GUILD_ID)
+)
+@app_commands.describe(player="The name of the player. Default is Babibelbleu")
+@app_commands.describe(pool="If you want to retrieve scores from a specific pool.")
+async def check_player_scores(interaction: discord.Interaction, player: str = "Babibelbleu", pool: str = None):
+    await interaction.response.send_message("Récupération des scores...", ephemeral=True)
+    embed = await show_individual_stats_from_player(player, pool)
     await interaction.edit_original_response(content="", embed=embed)
 
 
@@ -214,6 +228,30 @@ async def get_seedings_from_players(players_pp: dict):
     return discord.Embed(title="**Matches**", description=match_str)
 
 
+async def show_individual_stats_from_player(player: str, pool: str):
+    embed_desc_str: str = ""
+    choke_str: str = f"{player} has a choke on "
+
+    for map_scores in rows:
+        if pool is not None and not map_scores['Stage'].startswith(pool):
+            continue
+
+        if map_scores[player] == "":
+            string_to_add: str = f"{map_scores['Stage']}: N/C"
+        else:
+            string_to_add: str = f"{map_scores['Stage']}: {map_scores[player]}"
+
+        if type(map_scores[player]) == str:
+            choke_str += f"{map_scores['Stage']}, "
+
+        embed_desc_str += string_to_add + "\n"
+
+    embed = discord.Embed(title=f"**List of {player}'s scores**", description=embed_desc_str)
+    embed.set_footer(text=choke_str)
+
+    return embed
+
+
 async def compare_stats_from_players(player1: str, player2: str):
 
     embed_desc_str: str = ""
@@ -229,10 +267,12 @@ async def compare_stats_from_players(player1: str, player2: str):
         if map_scores[player1] == "" or map_scores[player2] == "":
             string_to_add = f"{map_scores['Stage']} : NC"
         else:
-            if map_scores[player1] > map_scores[player2]:
+            player1_score = int(str(map_scores[player1]).replace("*", ""))
+            player2_score = int(str(map_scores[player2]).replace("*", ""))
+            if player1_score > player2_score:
                 p1_current_wins += 1
 
-                difference: int = map_scores[player1] - map_scores[player2]
+                difference: int = player1_score - player2_score
                 string_to_add = f"{map_scores['Stage']} : **{player1}** with {map_scores[player1]} (+{difference})"
 
                 p1_wins_str += map_scores['Stage']
@@ -240,7 +280,7 @@ async def compare_stats_from_players(player1: str, player2: str):
             else:
                 p2_current_wins += 1
 
-                difference: int = map_scores[player2] - map_scores[player1]
+                difference: int = player2_score - player1_score
                 string_to_add = f"{map_scores['Stage']} : **{player2}** with {map_scores[player2]} (+{difference})"
 
                 p2_wins_str += map_scores['Stage']
@@ -262,7 +302,9 @@ def get_number_of_winning_scores(player1: str, player2: str):
         if map_scores[player1] == "" or map_scores[player2] == "":
             continue
         else:
-            if map_scores[player1] > map_scores[player2]:
+            player1_score = int(str(map_scores[player1]).replace("*", ""))
+            player2_score = int(str(map_scores[player2]).replace("*", ""))
+            if player1_score > player2_score:
                 p1_wins += 1
             else:
                 p2_wins += 1
@@ -288,13 +330,17 @@ def update_sheet_with_game_id(game_id: int):
         for score in scores:
             user = score.user.username
             score_done = score.score
+            is_sore_choke = check_if_score_is_choke(score, game.beatmap)
             print(f"{user} : {score_done}")
+            print(f"The score is potentially {'not' if not is_sore_choke else ''} a choke !")
             row, col = update_score_in_sheet(user, beatmap_id, int(score_done))
             if row == -1 or col == -1:
                 continue
-            cells_to_update.append(Cell(row=row, col=col, value=int(score_done)))
+            value_to_update = int(score_done) if not is_sore_choke else score_done + "*"
+            cells_to_update.append(Cell(row=row, col=col, value=value_to_update))
 
     print(cells_to_update)
+    print("updating cells")
     worksheet.update_cells(cells_to_update)
 
 
