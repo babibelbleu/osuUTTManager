@@ -333,18 +333,20 @@ def update_sheet_with_game_id(game_id: int):
             is_sore_choke = check_if_score_is_choke(score, game.beatmap)
             print(f"{user} : {score_done}")
             print(f"The score is potentially {'not' if not is_sore_choke else ''} a choke !")
-            row, col = update_score_in_sheet(user, beatmap_id, int(score_done))
+            row, col = update_score_in_sheet(user, beatmap_id, int(score_done), is_sore_choke)
             if row == -1 or col == -1:
                 continue
             value_to_update = int(score_done) if not is_sore_choke else score_done + "*"
             cells_to_update.append(Cell(row=row, col=col, value=value_to_update))
 
-    print(cells_to_update)
-    print("updating cells")
-    worksheet.update_cells(cells_to_update)
+    if len(cells_to_update) > 0:
+        print("updating cells")
+        worksheet.update_cells(cells_to_update)
+    else :
+        print("Aucune cellule à mettre à jour")
 
 
-def update_score_in_sheet(player: str, map_id: str, score: int):
+def update_score_in_sheet(player: str, map_id: str, score: int, is_score_choke: bool):
     index_col = 0
     index_row = 1
 
@@ -354,11 +356,18 @@ def update_score_in_sheet(player: str, map_id: str, score: int):
             for key in row.keys():
                 index_col += 1
                 if str(key).casefold() == player.casefold():
+                    is_score_choke_in_sheet = type(row[key]) is str and row[key][-1].casefold() == "*".casefold()
+                    score_in_sheet = row[key]
                     if row[key] == '':
                         row[key] = 0
-                    if int(row[key]) < int(score):
+                    if type(row[key]) is str and is_score_choke_in_sheet:
+                        score_in_sheet = row[key][:-1]  # Remove the '*' to cast to integer
+                    if int(score) < int(score_in_sheet):
                         print("Le score réalisé est supérieur à celui de la sheet !")
                         row[key] = score
+                        return index_row, index_col
+                    if is_score_choke != is_score_choke_in_sheet:
+                        # Update the sheet because we have to remove or add the choke mark ('*')
                         return index_row, index_col
 
     return -1, -1

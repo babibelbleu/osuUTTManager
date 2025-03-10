@@ -45,8 +45,8 @@ def remove_duplicate_elements_in_list(items: list):
 def check_if_score_is_choke(score: MultiplayerScore, beatmap: Beatmap):
     conditions = [
         int(score.count_miss) > int(score.count_200),
-        int(score.count_miss) < 0.001 * (int(beatmap.count_normal_notes) + int(beatmap.count_slider)),
-        int(score.score) > 975000 and (int(score.count_miss) > 0 or int(score.count_50 > 0))
+        0 < int(score.count_miss) < 0.001 * (int(beatmap.count_normal_notes) + int(beatmap.count_slider)),
+        int(score.score) > 975000 and (int(score.count_miss) > 0 or int(score.count_50) > 0)
     ]
 
     for condition in conditions:
