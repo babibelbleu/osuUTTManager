@@ -52,4 +52,9 @@ class Client:
             "b": beatmap_id
         }
 
-        return Beatmap(self._req("/get_beatmaps", params))
+        _req = self._req("/get_beatmaps", params)
+
+        if len(_req) == 0:
+            return None
+
+        return Beatmap(_req)
